@@ -3,6 +3,7 @@ package world.cepi.kstom.command.kommand
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.entity.Player
+import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.util.hasDeepPermission
 
 /**
@@ -32,11 +33,11 @@ class KSyntax(
             }
         } else {
             kommandReference.command.addConditionalSyntax(
-                { sender, string ->
-                    conditionPasses(Kommand.ConditionContext(sender, sender as? Player, string ?: ""))
-                            && checkPermAndSendMessage(sender)
+                { sender, string -> conditionPasses(Kommand.ConditionContext(sender, sender as? Player, string ?: "")) },
+                { sender, context ->
+                    if (!checkPermAndSendMessage(sender)) return@addConditionalSyntax
+                    executor(Kommand.SyntaxContext(sender, context))
                 },
-                { sender, context -> executor(Kommand.SyntaxContext(sender, context)) },
                 *arguments
             )
         }
@@ -45,12 +46,12 @@ class KSyntax(
     private fun checkPermAndSendMessage(sender: CommandSender): Boolean {
         if (permission != null) {
             if (!sender.hasDeepPermission(permission)) {
-                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender))
+                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender).asMini())
                 return false
             }
         } else if (kommandReference.defaultPermission != null) {
             if (!sender.hasDeepPermission(kommandReference.defaultPermission!!)) {
-                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender))
+                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender).asMini())
                 return false
             }
         }
