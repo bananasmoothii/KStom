@@ -23,6 +23,17 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
 
     val command = Command(name, *aliases)
 
+    /**
+     * A permission that will be checked before executing this command if no other permission is given in [syntax]
+     */
+    var defaultPermission: String? = null
+
+    /**
+     * A supplier of a message that will be sent to the player if he doesn't have the permission to use the command like
+     * they did.
+     */
+    var defaultPermissionMessage: (CommandSender) -> String = { "<red>Sorry ! You don't have the permissions to do that!" }
+
     init {
         k()
     }
