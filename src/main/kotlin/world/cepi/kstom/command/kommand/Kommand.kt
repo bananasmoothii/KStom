@@ -55,29 +55,20 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
     @Contract(pure = true)
     fun syntax(
         vararg arguments: Argument<*> = arrayOf(),
-        permission: String? = null,
-        permissionMessage: ((CommandSender) -> String)? = null
-    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this, permission = permission,
-        permissionMessage = permissionMessage)
+    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this)
 
     @Contract(pure = true)
     fun syntax(
         vararg arguments: Argument<*> = arrayOf(),
-        permission: String? = null,
-        permissionMessage: ((CommandSender) -> String)? = null,
         executor: SyntaxContext.() -> Unit
-    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this, permission = permission,
-        permissionMessage = permissionMessage).also { it.invoke(executor) }
+    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this).also { it.invoke(executor) }
 
     @Contract(pure = true)
     fun syntaxSuspending(
         context: CoroutineContext = Dispatchers.IO,
         vararg arguments: Argument<*> = arrayOf(),
-        permission: String? = null,
-        permissionMessage: ((CommandSender) -> String)? = null,
         executor: suspend SyntaxContext.() -> Unit
-    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this, permission = permission,
-        permissionMessage = permissionMessage).invoke {
+    ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this).invoke {
         CoroutineScope(context).launch { executor() }
     }
 
