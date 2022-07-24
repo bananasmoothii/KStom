@@ -15,7 +15,7 @@ class KSyntax(
     override val conditions: MutableList<Kommand.ConditionContext.() -> Boolean> = mutableListOf(),
     override val kommandReference: Kommand,
     val permission: String? = null,
-    val permissionMessage: (CommandSender) -> String = { "<red>Sorry ! You don't have the permissions to do that!" }
+    val permissionMessage: ((CommandSender) -> String)? = null
 ) : Kondition<KSyntax>() {
     override val t: KSyntax
         get() = this
@@ -45,12 +45,12 @@ class KSyntax(
     private fun checkPermAndSendMessage(sender: CommandSender): Boolean {
         if (permission != null) {
             if (!sender.hasDeepPermission(permission)) {
-                sender.sendMessage(permissionMessage(sender))
+                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender))
                 return false
             }
         } else if (kommandReference.defaultPermission != null) {
             if (!sender.hasDeepPermission(kommandReference.defaultPermission!!)) {
-                sender.sendMessage(kommandReference.defaultPermissionMessage(sender))
+                sender.sendMessage((permissionMessage ?: kommandReference.defaultPermissionMessage)(sender))
                 return false
             }
         }
