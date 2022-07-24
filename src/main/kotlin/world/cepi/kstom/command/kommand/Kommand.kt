@@ -4,7 +4,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.minestom.server.command.CommandSender
-import net.minestom.server.command.builder.*
+import net.minestom.server.command.builder.Command
+import net.minestom.server.command.builder.CommandContext
+import net.minestom.server.command.builder.CommandExecutor
 import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.command.builder.exception.ArgumentSyntaxException
 import net.minestom.server.entity.Player
@@ -62,6 +64,20 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
         vararg arguments: Argument<*> = arrayOf(),
         executor: SyntaxContext.() -> Unit
     ) = KSyntax(*arguments, conditions = conditions.toMutableList(), kommandReference = this).also { it.invoke(executor) }
+
+    @Contract(pure = true)
+    fun buildSyntax(vararg arguments: Argument<*>, block: KSyntaxBuilder.() -> Unit) = KSyntaxBuilder(*arguments).apply(block).execute()
+
+    inner class KSyntaxBuilder(vararg val arguments: Argument<*>) {
+        val conditions: MutableList<ConditionContext.() -> Boolean> = mutableListOf()
+        var permission: String? = null
+        var permissionMessage: ((CommandSender) -> String)? = null
+        var executor: SyntaxContext.() -> Unit = {}
+
+        fun build() = KSyntax(arguments = arguments, conditions, this@Kommand, permission, permissionMessage)
+
+        fun execute() = build().invoke(executor)
+    }
 
     @Contract(pure = true)
     fun syntaxSuspending(
