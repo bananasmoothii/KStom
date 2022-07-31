@@ -3,6 +3,9 @@ package world.cepi.kstom.command.kommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext
@@ -14,7 +17,8 @@ import org.jetbrains.annotations.Contract
 import world.cepi.kstom.Manager
 import kotlin.coroutines.CoroutineContext
 
-open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases: String) : Kondition<Kommand>() {
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+open class Kommand(k: Kommand.() -> Unit = {}, name: String, vararg aliases: String) : Kondition<Kommand>() {
     override val conditions: MutableList<ConditionContext.() -> Boolean> = mutableListOf()
     var playerCallbackFailMessage: (CommandSender) -> Unit = { }
     var consoleCallbackFailMessage: (CommandSender) -> Unit = { }
@@ -32,11 +36,14 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
 
     /**
      * A supplier of a message that will be sent to the player if he doesn't have the permission to use the command like
-     * they did.
+     * they did. It takes a String as argument, it is the permission that is missing.
      */
-    var defaultPermissionMessage: (CommandSender) -> String = { "<red>Sorry ! You don't have the permissions to do that!" }
+    lateinit var defaultPermissionMessage: (String) -> Component
 
     init {
+        permissionMiniMessage(
+            "<hover:show_text:'<grey><i>Lacking permission: </i><perm>'><red>Sorry! You don't have the permissions to do that!"
+        )
         k()
     }
 
@@ -71,7 +78,7 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
     inner class KSyntaxBuilder(vararg val arguments: Argument<*>) {
         val conditions: MutableList<ConditionContext.() -> Boolean> = mutableListOf()
         var permission: String? = null
-        var permissionMessage: ((CommandSender) -> String)? = null
+        var permissionMessage: ((String) -> Component)? = null
         var executor: SyntaxContext.() -> Unit = {}
 
         fun build() = KSyntax(arguments = arguments, conditions, this@Kommand, permission, permissionMessage)
@@ -129,6 +136,17 @@ open class Kommand(val k: Kommand.() -> Unit = {}, name: String, vararg aliases:
         Manager.command.unregister(command)
     }
 
-
+    /**
+     * A shortcut for setting [defaultPermissionMessage] that automatically turns your message into a MiniMessage and replaces
+     * <perm> with the permission that is missing.
+     */
+    fun permissionMiniMessage(message: String) {
+        defaultPermissionMessage = { perm ->
+            MiniMessage.miniMessage().deserialize(
+                message,
+                Placeholder.unparsed("perm", perm)
+            )
+        }
+    }
 
 }
